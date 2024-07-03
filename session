@@ -1,0 +1,65 @@
+import javax.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+@Controller
+public class MainController {
+
+    // Existing code...
+
+    @Autowired
+    private MainDao dao;
+
+    @Autowired
+    private HttpSession session; // Inject HttpSession
+
+    // Existing mappings...
+
+    @RequestMapping(value = "/doLogin", method = RequestMethod.POST)
+    public String doLogin(@ModelAttribute("lm") LoginModel lm) {
+        List<RegModel> list = dao.doLogin(lm);
+        if (list != null && !list.isEmpty()) {
+            // Set email in session upon successful login
+            session.setAttribute("loggedInUser", lm.getEmail());
+            return "redirect:/view"; // Redirect to dashboard or another page
+        } else {
+            System.out.println("Login failed");
+            return "login"; // Handle login failure, redirect to login page
+        }
+    }
+
+    // Existing mappings...
+
+    @RequestMapping("/dashboard")
+    public String dashboard(Model model) {
+        // Retrieve email from session and pass it to the dashboard JSP
+        String loggedInUser = (String) session.getAttribute("loggedInUser");
+        model.addAttribute("loggedInUser", loggedInUser);
+        return "dashboard";
+    }
+}
+
+
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1" pageEncoding="ISO-8859-1"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to the Dashboard</h1>
+    <p>Logged in as: ${loggedInUser}</p>
+    <!-- Your dashboard content here -->
+</body>
+</html>
+
+to remove email
+@RequestMapping("/logout")
+public String logout() {
+    session.invalidate(); // Invalidate session
+    return "redirect:/login"; // Redirect to login page after logout
+}
